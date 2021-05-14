@@ -52,6 +52,7 @@ public final class CoreDataFeedStore: FeedStore {
 					try CoreDataCache(context: self.context).save(feed, timestamp: timestamp)
 					completion(.none)
 				} catch {
+					context.rollback()
 					completion(error)
 				}
 			}
