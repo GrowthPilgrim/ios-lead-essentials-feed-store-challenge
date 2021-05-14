@@ -30,7 +30,7 @@ public final class CoreDataFeedStore: FeedStore {
 
 	public func retrieve(completion: @escaping RetrievalCompletion) {
 		context.perform { [unowned self] in
-			let request = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
+			let request: NSFetchRequest<CoreDataCache> = CoreDataCache.fetchRequest()
 			if let cache = try? self.context.fetch(request).first {
 				let cachedFeed = cache.feed?.array as? [CoreDataFeedImage] ?? []
 				let timestamp = cache.timestamp ?? Date()
