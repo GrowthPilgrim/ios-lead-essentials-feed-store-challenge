@@ -7,8 +7,14 @@
 //
 //
 
-import Foundation
 import CoreData
 
 @objc(CoreDataFeedImage)
-public class CoreDataFeedImage: NSManagedObject {}
+public class CoreDataFeedImage: NSManagedObject {
+	func update(from image: LocalFeedImage) {
+		self.id = image.id
+		self.imageDescription = image.description
+		self.location = image.location
+		self.url = image.url
+	}
+}

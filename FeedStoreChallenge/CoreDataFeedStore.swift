@@ -30,39 +30,19 @@ public final class CoreDataFeedStore: FeedStore {
 
 	public func retrieve(completion: @escaping RetrievalCompletion) {
 		context.perform { [unowned self] in
-			let request: NSFetchRequest<CoreDataCache> = CoreDataCache.fetchRequest()
-			if let cache = try? self.context.fetch(request).first,
-			   let feed = cache.feed?.array as? [CoreDataFeedImage],
-			   let timestamp = cache.timestamp {
-				let imageFeed = feed.map {
-					return LocalFeedImage(id: $0.id!, description: $0.imageDescription, location: $0.location, url: $0.url!)
-				}
-
-				completion(.found(feed: imageFeed, timestamp: timestamp))
-			} else {
-				completion(.empty)
+			guard let cache = try? self.context.fetch(CoreDataCache.fetchRequest()).first as? CoreDataCache,
+			      let timestamp = cache.timestamp else {
+				return completion(.empty)
 			}
+
+			completion(.found(feed: cache.localFeed(), timestamp: timestamp))
 		}
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		context.perform { [unowned self] in
-
-			let coreDataFeed: [CoreDataFeedImage] = feed.map { image in
-				let coreDataFeedImage = CoreDataFeedImage(context: self.context)
-				coreDataFeedImage.id = image.id
-				coreDataFeedImage.imageDescription = image.description
-				coreDataFeedImage.location = image.location
-				coreDataFeedImage.url = image.url
-				return coreDataFeedImage
-			}
-
 			do {
-				let coreDataCache = CoreDataCache(context: self.context)
-				coreDataCache.timestamp = timestamp
-				coreDataCache.feed = NSOrderedSet(array: coreDataFeed)
-				self.context.insert(coreDataCache)
-				try self.context.save()
+				try CoreDataCache(context: self.context).save(feed, timestamp: timestamp)
 				completion(.none)
 			} catch {
 				completion(error)
