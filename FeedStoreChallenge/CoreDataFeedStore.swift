@@ -32,7 +32,7 @@ public final class CoreDataFeedStore: FeedStore {
 		context.perform { [unowned self] in
 			var cache: CoreDataCache?
 			do {
-				cache = try self.context.fetch(CoreDataCache.fetchRequest()).first as? CoreDataCache
+				cache = try context.fetch(CoreDataCache.fetchRequest()).first as? CoreDataCache
 			} catch {
 				return completion(.failure(error))
 			}
@@ -46,10 +46,15 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		context.perform { [unowned self] in
-			deleteCachedFeed { _ in
+		context.performAndWait { [unowned self] in
+			deleteCachedFeed { error in
+				guard error == nil else {
+					context.rollback()
+					return completion(error)
+				}
+
 				do {
-					try CoreDataCache(context: self.context).save(feed, timestamp: timestamp)
+					try CoreDataCache(context: context).save(feed, timestamp: timestamp)
 					completion(.none)
 				} catch {
 					context.rollback()
@@ -60,11 +65,11 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		context.perform { [unowned self] in
+		context.performAndWait { [unowned self] in
 			do {
-				let existingCaches = try self.context.fetch(CoreDataCache.fetchRequest()) as? [CoreDataCache]
-				existingCaches?.forEach { self.context.delete($0) }
-				try self.context.save()
+				let existingCaches = try context.fetch(CoreDataCache.fetchRequest()) as? [CoreDataCache]
+				existingCaches?.forEach { context.delete($0) }
+				try context.save()
 				completion(.none)
 			} catch {
 				context.rollback()
