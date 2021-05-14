@@ -64,6 +64,7 @@ public final class CoreDataFeedStore: FeedStore {
 			do {
 				let existingCaches = try self.context.fetch(CoreDataCache.fetchRequest()) as? [CoreDataCache]
 				existingCaches?.forEach { self.context.delete($0) }
+				try self.context.save()
 				completion(.none)
 			} catch {
 				completion(error)
