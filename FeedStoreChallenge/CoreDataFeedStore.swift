@@ -29,11 +29,50 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func retrieve(completion: @escaping RetrievalCompletion) {
-		completion(.empty)
+		context.perform { [unowned self] in
+			let request = NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
+			if let cache = try? self.context.fetch(request).first {
+				let cachedFeed = cache.feed?.array as? [CoreDataFeedImage] ?? []
+				let timestamp = cache.timestamp ?? Date()
+				var imageFeed = [LocalFeedImage]()
+				for image in cachedFeed {
+					let localImage = LocalFeedImage(id: image.id!,
+					                                description: image.imageDescription,
+					                                location: image.location,
+					                                url: image.url!)
+					imageFeed.append(localImage)
+				}
+				completion(.found(feed: imageFeed, timestamp: timestamp))
+			} else {
+				completion(.empty)
+			}
+		}
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		fatalError("Must be implemented")
+		context.perform { [unowned self] in
+
+			var coreDataFeed = [CoreDataFeedImage]()
+			for image in feed {
+				let coreDataFeedImage = CoreDataFeedImage(context: self.context)
+				coreDataFeedImage.id = image.id
+				coreDataFeedImage.imageDescription = image.description
+				coreDataFeedImage.location = image.location
+				coreDataFeedImage.url = image.url
+				coreDataFeed.append(coreDataFeedImage)
+			}
+			let coreDataCache = CoreDataCache(context: self.context)
+			coreDataCache.timestamp = timestamp
+			coreDataCache.feed = NSOrderedSet(array: coreDataFeed)
+
+			do {
+				self.context.insert(coreDataCache)
+				try self.context.save()
+				completion(.none)
+			} catch {
+				completion(error)
+			}
+		}
 	}
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
