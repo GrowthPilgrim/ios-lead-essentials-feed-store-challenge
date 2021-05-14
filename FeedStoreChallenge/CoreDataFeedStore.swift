@@ -30,8 +30,14 @@ public final class CoreDataFeedStore: FeedStore {
 
 	public func retrieve(completion: @escaping RetrievalCompletion) {
 		context.perform { [unowned self] in
-			guard let cache = try? self.context.fetch(CoreDataCache.fetchRequest()).first as? CoreDataCache,
-			      let timestamp = cache.timestamp else {
+			var cache: CoreDataCache?
+			do {
+				cache = try self.context.fetch(CoreDataCache.fetchRequest()).first as? CoreDataCache
+			} catch {
+				return completion(.failure(error))
+			}
+
+			guard let cache = cache, let timestamp = cache.timestamp else {
 				return completion(.empty)
 			}
 
