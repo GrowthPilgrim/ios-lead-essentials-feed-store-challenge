@@ -47,16 +47,26 @@ public final class CoreDataFeedStore: FeedStore {
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		context.perform { [unowned self] in
-			do {
-				try CoreDataCache(context: self.context).save(feed, timestamp: timestamp)
-				completion(.none)
-			} catch {
-				completion(error)
+			deleteCachedFeed { _ in
+				do {
+					try CoreDataCache(context: self.context).save(feed, timestamp: timestamp)
+					completion(.none)
+				} catch {
+					completion(error)
+				}
 			}
 		}
 	}
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		fatalError("Must be implemented")
+		context.perform { [unowned self] in
+			do {
+				let existingCaches = try self.context.fetch(CoreDataCache.fetchRequest()) as? [CoreDataCache]
+				existingCaches?.forEach { self.context.delete($0) }
+				completion(.none)
+			} catch {
+				completion(error)
+			}
+		}
 	}
 }
