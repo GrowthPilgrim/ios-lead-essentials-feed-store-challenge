@@ -36,3 +36,21 @@ public class CoreDataCache: NSManagedObject {
 		return feed?.array as? [CoreDataFeedImage] ?? []
 	}
 }
+
+extension NSManagedObjectContext {
+	func fetchCache() throws -> (feed: [LocalFeedImage], timestamp: Date)? {
+		let caches: [CoreDataCache] = try fetch(CoreDataCache.fetchRequest())
+		guard let cache = caches.first,
+		      let timestamp = caches.first?.timestamp else {
+			return nil
+		}
+
+		return (cache.localFeed(), timestamp)
+	}
+
+	func deleteCache() throws {
+		let existingCaches = try fetch(CoreDataCache.fetchRequest()) as? [CoreDataCache]
+		existingCaches?.forEach { delete($0) }
+		try save()
+	}
+}
