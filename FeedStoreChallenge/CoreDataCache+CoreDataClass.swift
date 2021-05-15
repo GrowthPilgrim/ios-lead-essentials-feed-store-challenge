@@ -30,7 +30,7 @@ public class CoreDataCache: NSManagedObject {
 		addToFeed(NSOrderedSet(array: coreDataFeed))
 	}
 
-	func localFeed() -> [LocalFeedImage] {
+	fileprivate func localFeed() -> [LocalFeedImage] {
 		coreDataFeed().map {
 			LocalFeedImage(id: $0.id!, description: $0.imageDescription, location: $0.location, url: $0.url!)
 		}
