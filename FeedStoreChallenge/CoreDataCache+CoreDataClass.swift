@@ -11,54 +11,48 @@ import CoreData
 
 @objc(CoreDataCache)
 public class CoreDataCache: NSManagedObject {
-	convenience init(context: NSManagedObjectContext, feed: [LocalFeedImage], timestamp: Date) {
+	convenience init?(context: NSManagedObjectContext, feed: [LocalFeedImage], timestamp: Date) {
 		self.init(context: context)
 
-		self.addToCache(feed)
 		self.timestamp = timestamp
+		self.addToFeed(context.toCoreDataFeed(feed))
 	}
 
-	private func addToCache(_ feed: [LocalFeedImage]) {
-		guard let context = self.managedObjectContext else { return }
+	static func delete(on context: NSManagedObjectContext) throws {
+		let existingCaches = try context.fetch(fetchRequest()) as? [CoreDataCache]
+		existingCaches?.forEach { context.delete($0) }
+		try context.save()
+	}
 
-		let coreDataFeed: [CoreDataFeedImage] = feed.map { localImage in
-			let managedImage = CoreDataFeedImage(context: context)
-			managedImage.update(from: localImage)
-			return managedImage
+	static func fetch(on context: NSManagedObjectContext) throws -> (feed: [LocalFeedImage], timestamp: Date)? {
+		let caches: [CoreDataCache] = try context.fetch(CoreDataCache.fetchRequest())
+		guard let cache = caches.first, let timestamp = caches.first?.timestamp else {
+			return nil
 		}
 
-		addToFeed(NSOrderedSet(array: coreDataFeed))
-	}
-
-	fileprivate func localFeed() -> [LocalFeedImage] {
-		coreDataFeed().map {
-			LocalFeedImage(id: $0.id!, description: $0.imageDescription, location: $0.location, url: $0.url!)
-		}
-	}
-
-	private func coreDataFeed() -> [CoreDataFeedImage] {
-		return feed?.array as? [CoreDataFeedImage] ?? []
+		let feed = context.toLocalFeed(cache.feed?.array as? [CoreDataFeedImage] ?? [])
+		return (feed, timestamp)
 	}
 
 	func save() throws {
 		try managedObjectContext?.save()
 	}
-}
 
-extension NSManagedObjectContext {
-	func fetchCache() throws -> (feed: [LocalFeedImage], timestamp: Date)? {
-		let caches: [CoreDataCache] = try fetch(CoreDataCache.fetchRequest())
-		guard let cache = caches.first,
-		      let timestamp = caches.first?.timestamp else {
-			return nil
-		}
-
-		return (cache.localFeed(), timestamp)
+	private func addToFeed(_ feed: [CoreDataFeedImage]) {
+		self.addToFeed(NSOrderedSet(array: feed))
 	}
 
-	func deleteCache() throws {
-		let existingCaches = try fetch(CoreDataCache.fetchRequest()) as? [CoreDataCache]
-		existingCaches?.forEach { delete($0) }
-		try save()
+	private var feedImages: [CoreDataFeedImage] {
+		feed?.array as? [CoreDataFeedImage] ?? []
+	}
+}
+
+fileprivate extension NSManagedObjectContext {
+	func toCoreDataFeed(_ localFeed: [LocalFeedImage]) -> [CoreDataFeedImage] {
+		return localFeed.map { CoreDataFeedImage(context: self, from: $0) }
+	}
+
+	func toLocalFeed(_ coreDataFeed: [CoreDataFeedImage]) -> [LocalFeedImage] {
+		return coreDataFeed.map { LocalFeedImage(id: $0.id!, description: $0.imageDescription, location: $0.location, url: $0.url!) }
 	}
 }

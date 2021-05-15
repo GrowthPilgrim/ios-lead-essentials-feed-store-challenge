@@ -31,7 +31,7 @@ public final class CoreDataFeedStore: FeedStore {
 	public func retrieve(completion: @escaping RetrievalCompletion) {
 		context.perform { [unowned self] in
 			do {
-				let cache = try context.fetchCache()
+				let cache = try CoreDataCache.fetch(on: context)
 				guard let cache = cache else {
 					return completion(.empty)
 				}
@@ -51,7 +51,7 @@ public final class CoreDataFeedStore: FeedStore {
 				}
 
 				do {
-					try CoreDataCache(context: context, feed: feed, timestamp: timestamp).save()
+					try CoreDataCache(context: context, feed: feed, timestamp: timestamp)?.save()
 					completion(.none)
 				} catch {
 					context.rollback()
@@ -64,7 +64,7 @@ public final class CoreDataFeedStore: FeedStore {
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		context.performAndWait { [unowned self] in
 			do {
-				try context.deleteCache()
+				try CoreDataCache.delete(on: context)
 				completion(.none)
 			} catch {
 				context.rollback()

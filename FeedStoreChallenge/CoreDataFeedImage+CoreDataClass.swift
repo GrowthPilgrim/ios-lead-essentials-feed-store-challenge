@@ -11,7 +11,9 @@ import CoreData
 
 @objc(CoreDataFeedImage)
 public class CoreDataFeedImage: NSManagedObject {
-	func update(from image: LocalFeedImage) {
+	convenience init(context: NSManagedObjectContext, from image: LocalFeedImage) {
+		self.init(context: context)
+
 		self.id = image.id
 		self.imageDescription = image.description
 		self.location = image.location
