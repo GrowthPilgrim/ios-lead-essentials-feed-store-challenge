@@ -11,7 +11,14 @@ import CoreData
 
 @objc(CoreDataCache)
 public class CoreDataCache: NSManagedObject {
-	func save(_ feed: [LocalFeedImage], timestamp: Date) throws {
+	convenience init(context: NSManagedObjectContext, feed: [LocalFeedImage], timestamp: Date) {
+		self.init(context: context)
+
+		self.addToCache(feed)
+		self.timestamp = timestamp
+	}
+
+	private func addToCache(_ feed: [LocalFeedImage]) {
 		guard let context = self.managedObjectContext else { return }
 
 		let coreDataFeed: [CoreDataFeedImage] = feed.map { localImage in
@@ -21,9 +28,6 @@ public class CoreDataCache: NSManagedObject {
 		}
 
 		addToFeed(NSOrderedSet(array: coreDataFeed))
-		self.timestamp = timestamp
-
-		try managedObjectContext?.save()
 	}
 
 	func localFeed() -> [LocalFeedImage] {
@@ -34,6 +38,10 @@ public class CoreDataCache: NSManagedObject {
 
 	private func coreDataFeed() -> [CoreDataFeedImage] {
 		return feed?.array as? [CoreDataFeedImage] ?? []
+	}
+
+	func save() throws {
+		try managedObjectContext?.save()
 	}
 }
 

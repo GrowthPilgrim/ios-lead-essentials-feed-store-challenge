@@ -51,7 +51,7 @@ public final class CoreDataFeedStore: FeedStore {
 				}
 
 				do {
-					try CoreDataCache(context: context).save(feed, timestamp: timestamp)
+					try CoreDataCache(context: context, feed: feed, timestamp: timestamp).save()
 					completion(.none)
 				} catch {
 					context.rollback()
