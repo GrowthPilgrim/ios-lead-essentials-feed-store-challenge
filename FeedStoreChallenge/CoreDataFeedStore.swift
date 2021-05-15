@@ -31,23 +31,25 @@ public final class CoreDataFeedStore: FeedStore {
 	public func retrieve(completion: @escaping RetrievalCompletion) {
 		perform { context in
 			do {
-				let cache = try CoreDataCache.fetch(on: context)
-				if let (feed, timestamp) = cache {
-					completion(.found(feed: feed, timestamp: timestamp))
+				if let cache = try CoreDataCache.find(in: context) {
+					completion(.found(feed: cache.localFeed, timestamp: cache.timestamp!))
 				} else {
-					return completion(.empty)
+					completion(.empty)
 				}
 			} catch {
-				return completion(.failure(error))
+				completion(.failure(error))
 			}
 		}
 	}
 
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		performAndWait { context in
+		perform { context in
 			do {
-				try CoreDataCache.delete(on: context)
-				try CoreDataCache(context: context, feed: feed, timestamp: timestamp)?.save()
+				let coreDataCache = try CoreDataCache.newUniqueInstance(in: context)
+				coreDataCache.timestamp = timestamp
+				coreDataCache.feed = CoreDataFeedImage.images(from: feed, in: context)
+
+				try context.save()
 				completion(.none)
 			} catch {
 				context.rollback()
@@ -57,9 +59,9 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		performAndWait { context in
+		perform { context in
 			do {
-				try CoreDataCache.delete(on: context)
+				try CoreDataCache.find(in: context).map(context.delete).map(context.save)
 				completion(.none)
 			} catch {
 				context.rollback()
@@ -69,16 +71,7 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 
 	private func perform(action: @escaping (NSManagedObjectContext) -> Void) {
-		context.perform { [weak self] in
-			guard let self = self else { return }
-			action(self.context)
-		}
-	}
-
-	private func performAndWait(action: @escaping (NSManagedObjectContext) -> Void) {
-		context.performAndWait { [weak self] in
-			guard let self = self else { return }
-			action(self.context)
-		}
+		let context = self.context
+		context.perform { action(context) }
 	}
 }

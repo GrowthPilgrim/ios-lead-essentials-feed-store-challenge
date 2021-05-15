@@ -19,4 +19,12 @@ public class CoreDataFeedImage: NSManagedObject {
 		self.location = image.location
 		self.url = image.url
 	}
+
+	static func images(from localFeed: [LocalFeedImage], in context: NSManagedObjectContext) -> NSOrderedSet {
+		return NSOrderedSet(array: localFeed.map { CoreDataFeedImage(context: context, from: $0) })
+	}
+
+	var local: LocalFeedImage {
+		LocalFeedImage(id: id!, description: imageDescription, location: location, url: url!)
+	}
 }
