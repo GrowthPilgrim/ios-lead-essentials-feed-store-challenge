@@ -10,7 +10,7 @@
 import CoreData
 
 @objc(CoreDataCache)
-public class CoreDataCache: NSManagedObject {
+final class CoreDataCache: NSManagedObject {
 	static func newUniqueInstance(in context: NSManagedObjectContext) throws -> CoreDataCache {
 		try find(in: context).map(context.delete)
 		return CoreDataCache(context: context)
