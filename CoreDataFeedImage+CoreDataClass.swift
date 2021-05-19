@@ -2,15 +2,16 @@
 //  CoreDataFeedImage+CoreDataClass.swift
 //  FeedStoreChallenge
 //
-//  Created by Dennis Nehrenheim on 14.05.21.
+//  Created by Dennis Nehrenheim on 19.05.21.
 //  Copyright © 2021 Essential Developer. All rights reserved.
 //
 //
 
+import Foundation
 import CoreData
 
 @objc(CoreDataFeedImage)
-final class CoreDataFeedImage: NSManagedObject {
+public class CoreDataFeedImage: NSManagedObject {
 	convenience init(context: NSManagedObjectContext, from image: LocalFeedImage) {
 		self.init(context: context)
 
@@ -25,6 +26,6 @@ final class CoreDataFeedImage: NSManagedObject {
 	}
 
 	var local: LocalFeedImage {
-		LocalFeedImage(id: id!, description: imageDescription, location: location, url: url!)
+		LocalFeedImage(id: id, description: imageDescription, location: location, url: url)
 	}
 }

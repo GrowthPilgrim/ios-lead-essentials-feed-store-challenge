@@ -32,7 +32,7 @@ public final class CoreDataFeedStore: FeedStore {
 		perform { context in
 			do {
 				if let cache = try CoreDataCache.find(in: context) {
-					completion(.found(feed: cache.localFeed, timestamp: cache.timestamp!))
+					completion(.found(feed: cache.localFeed, timestamp: cache.timestamp))
 				} else {
 					completion(.empty)
 				}
