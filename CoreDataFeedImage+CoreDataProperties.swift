@@ -11,9 +11,6 @@ import Foundation
 import CoreData
 
 extension CoreDataFeedImage {
-	@nonobjc public class func fetchRequest() -> NSFetchRequest<CoreDataFeedImage> {
-		return NSFetchRequest<CoreDataFeedImage>(entityName: "CoreDataFeedImage")
-	}
 
 	@NSManaged public var id: UUID
 	@NSManaged public var imageDescription: String?
@@ -21,5 +18,3 @@ extension CoreDataFeedImage {
 	@NSManaged public var url: URL
 	@NSManaged public var cache: CoreDataCache
 }
-
-extension CoreDataFeedImage: Identifiable {}
