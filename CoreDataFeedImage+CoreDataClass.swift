@@ -11,7 +11,7 @@ import Foundation
 import CoreData
 
 @objc(CoreDataFeedImage)
-public class CoreDataFeedImage: NSManagedObject {
+final class CoreDataFeedImage: NSManagedObject {
 	convenience init(context: NSManagedObjectContext, from image: LocalFeedImage) {
 		self.init(context: context)
 

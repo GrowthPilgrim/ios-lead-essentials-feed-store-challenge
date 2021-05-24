@@ -15,6 +15,6 @@ extension CoreDataCache {
 		return NSFetchRequest<CoreDataCache>(entityName: "CoreDataCache")
 	}
 
-	@NSManaged public var timestamp: Date
-	@NSManaged public var feed: NSOrderedSet
+	@NSManaged var timestamp: Date
+	@NSManaged var feed: NSOrderedSet
 }

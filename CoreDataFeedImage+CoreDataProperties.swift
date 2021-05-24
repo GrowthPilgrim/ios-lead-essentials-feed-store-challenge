@@ -11,10 +11,9 @@ import Foundation
 import CoreData
 
 extension CoreDataFeedImage {
-
-	@NSManaged public var id: UUID
-	@NSManaged public var imageDescription: String?
-	@NSManaged public var location: String?
-	@NSManaged public var url: URL
-	@NSManaged public var cache: CoreDataCache
+	@NSManaged var id: UUID
+	@NSManaged var imageDescription: String?
+	@NSManaged var location: String?
+	@NSManaged var url: URL
+	@NSManaged var cache: CoreDataCache?
 }
